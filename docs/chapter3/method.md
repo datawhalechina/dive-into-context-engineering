@@ -5,7 +5,7 @@
 - 启发式指导，让模型思考、推理
 - 指导具体行为规范
 - Prompt Altitude（提示高度）应该处于合适的抽象层级
-- 使用 XML 标签或 Markdown 清晰划定区块（如 <background_information>, <instructions>）
+- 使用 XML 标签或 Markdown 清晰划定区块（如 `<background_information>`, `<instructions>`）
 - 追求最小完备信息集（Minimal set of information），而不是单纯的“短”。
 
 ### 禁止：
