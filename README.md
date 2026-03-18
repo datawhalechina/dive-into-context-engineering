@@ -20,20 +20,20 @@ https://datawhalechina.github.io/repo-template
 ## 目录
 *这里写你的项目目录，及其完成状态，已完成的部分添加上跳转链接*
 
-|  章节名   | 简介 | 状态 |
-|  ----  | ---- | ---- |
-| [第1章 xxx](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter1)  | xxx | ✅ |
-| [第2章 xxx](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter2)  | xxx | ✅ |
-| [第3章 xxx](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter3)  | xxx | ✅ |
-| 第4章  | xxx | 🚧 |
+| 章节名                                                                                                                          | 简介 | 状态 |
+|------------------------------------------------------------------------------------------------------------------------------| ---- | ---- |
+| [第1章 什么是上下文工程](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter1)                                      | xxx | ✅ |
+| [第2章 为什么需要上下文工程](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter2)                                    | xxx | ✅ |
+| [第3章 如何设计上下文中的每一个组件？](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter3)                               | xxx | ✅ |
+| [第4章 动态上下文管理策略 (Dynamic Context Strategies)](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter3)        | xxx | ✅ |
+| [第5章 Progressive disclosure（渐进式披露）——一种优雅的上下文工程设计哲学](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter3) | xxx | ✅ |
+| [第6章 miniMaster-最小实现claude code skills板块](https://github.com/datawhalechina/repo-template/blob/main/docs/chapter3)           | xxx | 🚧 |
 
 ## 贡献者名单
 
-| 姓名 | 职责 | 简介 |
-| :----| :---- | :---- |
-| 小明 | 项目负责人 | 一个理想主义者 |
-| 小红 | 第1章贡献者 | 小明的朋友 |
-| 小强 | 第2章贡献者 | 小明的朋友 |
+| 姓名  | 职责 |
+|:----| :---- |
+| 张文星 | 项目负责人 |
 
 *注：表头可自定义，但必须在名单中标明项目负责人*
 
