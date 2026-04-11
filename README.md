@@ -27,7 +27,7 @@
 
 ## 在线阅读
 
-📖 [https://funnamer.github.io/dive-into-context-engineering](https://funnamer.github.io/dive-into-context-engineering)
+📖 [https://datawhalechina.github.io/dive-into-context-engineering/](https://datawhalechina.github.io/dive-into-context-engineering/)
 
 ## 目录
 
