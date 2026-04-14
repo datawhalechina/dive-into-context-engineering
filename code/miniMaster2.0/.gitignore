@@ -47,6 +47,5 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# Documentation
-*.md
+
 !README.md

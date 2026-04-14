@@ -27,7 +27,7 @@
 
 ## 在线阅读
 
-📖 [https://datawhalechina.github.io/dive-into-context-engineering/](https://datawhalechina.github.io/dive-into-context-engineering/)
+📖 [https://datawhalechina.github.io/self-harness/](https://datawhalechina.github.io/self-harness/)
 
 ## 目录
 
