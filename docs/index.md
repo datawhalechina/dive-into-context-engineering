@@ -41,6 +41,14 @@ const members = [
     links: [
       { icon: 'github', link: 'https://github.com/Sm1les' },
     ]
+  },
+  {
+    avatar: 'https://www.github.com/TheCaptainUniverse.png',
+    name: 'CaptainUniverse_',
+    title: '核心贡献者',
+    links: [
+      { icon: 'github', link: 'https://github.com/TheCaptainUniverse' },
+    ]
   }
 ]
 </script>

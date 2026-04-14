@@ -5,18 +5,16 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from langsmith import traceable
 from langsmith.wrappers import wrap_openai
-from tqdm.asyncio import tqdm_asyncio
-
-# 导入工具类
-from tools.base_tool import BashTool, ReadTool, EditTool, WriteTool
-from tools.search_tool import GrepTool, GlobTool
 
 # 导入工具注册表
-from utils.get_tools import get_registry, execute_tool
+from utils.get_tools import get_registry, execute_tool as execute_registered_tool
 
 
 class ToDoList:
-    """待办事项列表管理类"""
+    """待办事项列表管理类。
+
+    Plan-Agent 只通过这里维护任务状态，避免把任务调度信息散落在主循环中。
+    """
 
     def __init__(self):
         self.tasks = []
@@ -59,12 +57,11 @@ class ToDoList:
                 return task
         return None
 
-
-import json
-
-
 class WorkingMemory:
-    """工作记忆管理类 - 按照 Token(字符) 长度触发动态压缩"""
+    """工作记忆管理类。
+
+    这里不追求严格的 token 计算，而是用字符数做近似控制，在成本和效果之间取平衡。
+    """
 
     def __init__(self, keep_latest_n: int = 3, max_chars: int = 45000):
         self.memories = []
@@ -150,36 +147,44 @@ def parse_model_output(response_text: str):
     return tool_name, parameters
 
 
-# 工具实例缓存
-tool_instances = {}
-
-
-def get_tool_instance(tool_class):
-    """获取工具实例（单例模式）"""
-    class_name = tool_class.__name__
-    if class_name not in tool_instances:
-        tool_instances[class_name] = tool_class()
-    return tool_instances[class_name]
-
-
 # 初始化工具注册表（全局单例）
 tool_registry = get_registry()
 
+# 这些名称虽然长得像 tool，但本质上属于主循环内部控制指令，
+# 不应该落到统一的工具执行链里，否则会把调度逻辑和真实工具混在一起。
+CONTROL_ACTIONS = {
+    "init_tasks",
+    "add_task",
+    "update_task_status",
+    "subagent_tool",
+    "update_task_conclusion",
+    "validate_tool",
+}
 
-def execute_tool(tool_name: str, parameters: dict):
+
+def is_control_action(tool_name: str) -> bool:
+    """判断当前名称是否属于由主循环直接处理的控制指令。"""
+    return tool_name in CONTROL_ACTIONS
+
+
+def execute_runtime_tool(tool_name: str, parameters: dict):
     """
-    执行对应的工具逻辑
-    使用 ToolRegistry 动态路由到对应的工具并执行
+    执行真正的可执行工具。
+    控制指令必须在对应循环中直接处理，不应进入通用工具执行链。
     """
-    # 待办事项相关工具（在代码中直接处理）
-    todo_tools = ["init_tasks", "add_task", "update_task_status"]
+    if is_control_action(tool_name):
+        return {"success": False, "error": f"控制指令 '{tool_name}' 不应通过工具执行链调用"}
 
-    if tool_name in todo_tools:
-        # 这些工具在 Plan-Agent 循环中直接处理，不需要执行外部工具
-        return {"success": True, "message": f"Todo tool '{tool_name}' should be handled directly"}
+    # 所有真实工具都统一交给注册表执行，便于后续继续替换底层实现而不改主循环。
+    return execute_registered_tool(tool_name, parameters)
 
-    # 使用工具注册表执行工具
-    return tool_registry.execute(tool_name, parameters)
+
+def get_available_tool_prompts():
+    """获取执行阶段和验证阶段共用的工具描述。"""
+    # 这里继续沿用旧分类名，是为了兼容 ToolPromptRenderer 里的别名转换逻辑。
+    base_tools = tool_registry.get_all_tools_prompt(category="base_tool")
+    search_tools = tool_registry.get_all_tools_prompt(category="search_tool")
+    return base_tools, search_tools
 
 
 # ==========================================
@@ -351,6 +356,8 @@ if __name__ == "__main__":
                     pending_memories = generator_memory.get_memories_to_summarize()
                     print(f"  🧠 检测到记忆滑出窗口，正在进行批量压缩...")
 
+                    # 早期工具记录会持续累积，这里把“旧摘要 + 新滑出窗口内容”合并成更短摘要，
+                    # 让 Generator 在长任务下仍能保留关键轨迹而不至于 Prompt 爆炸。
                     summary_prompt = f"""你是一个记忆压缩助手。请将以下早期的工具执行记录压缩成一段简短的摘要。
                 保留关键信息：尝试了什么工具、完成了什么任务，结论是什么。
 
@@ -364,8 +371,7 @@ if __name__ == "__main__":
                     print(f"  ✅ 记忆压缩完成。")
 
                 # 获取工具描述（动态生成）
-                base_tools = tool_registry.get_all_tools_prompt(category="base_tool")
-                search_tools = tool_registry.get_all_tools_prompt(category="search_tool")
+                base_tools, search_tools = get_available_tool_prompts()
 
                 generator_prompt = f"""
 你是一个执行智能体，你的任务是执行具体任务并生成内容。
@@ -416,7 +422,7 @@ if __name__ == "__main__":
 
                 if gen_tool != "update_task_conclusion":
                     # 执行普通工具并记录到 Generator 记忆
-                    result = execute_tool(gen_tool, gen_params)
+                    result = execute_runtime_tool(gen_tool, gen_params)
                     generator_memory.add_memory(gen_step, gen_tool, gen_params, result)
                     print(f"  ✅ 工具执行结果: {result}")
                     continue  # 继续第二层循环，Generator 继续工作
@@ -428,6 +434,7 @@ if __name__ == "__main__":
                     print(f"  📝 Generator 完成任务，结论: {conclusion}")
 
                     # 🔴 第三层循环：Validate-Agent (结果测试与验证)
+                    # 这里重新开启一套独立的验证记忆，避免执行阶段的长上下文污染验证判断。
                     validation_memory.clear_memories()
                     val_step = 0
                     is_valid = False
@@ -439,8 +446,7 @@ if __name__ == "__main__":
                         updated_task = to_do_list.get_task_by_name(curr_task_name)
 
                         # 获取工具描述
-                        base_tools = tool_registry.get_all_tools_prompt(category="base_tool")
-                        search_tools = tool_registry.get_all_tools_prompt(category="search_tool")
+                        base_tools, search_tools = get_available_tool_prompts()
 
                         val_prompt = f"""你是一个测试验证智能体，你的任务是验证当前task的完成是否有效。
 
@@ -485,7 +491,7 @@ if __name__ == "__main__":
 
                         if val_tool != "validate_tool":
                             # 执行验证辅助工具（如搜索、基础测试等）
-                            val_result = execute_tool(val_tool, val_params)
+                            val_result = execute_runtime_tool(val_tool, val_params)
                             validation_memory.add_memory(val_step, val_tool, val_params, val_result)
                             print(f"    ✅ 验证工具执行结果: {val_result}")
                             continue  # 继续第三层循环，直到得出最终验证结果

@@ -12,3 +12,5 @@ docs/.vitepress/cache
 .claude
 CLAUDE.md
 
+/.github/
+/.jbeval/

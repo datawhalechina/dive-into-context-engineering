@@ -1,57 +1,64 @@
-import os
+"""按 glob 模式查找文件和目录。"""
+
 import glob as glob_module
-import json
+import os
+
+from tools.core import BaseTool, ToolResult, ToolSpec
 
 
-class GlobTool:
-    name = "glob"
-    description = "Find files matching glob patterns."
+class GlobTool(BaseTool):
+    """封装 glob 搜索，并把文件与目录分别返回。"""
 
-    def prompt_block(self) -> str:
-        schema = {
+    spec = ToolSpec(
+        name="glob",
+        description="Find files matching glob patterns.",
+        category="search",
+        input_schema={
             "type": "object",
             "properties": {
                 "pattern": {"type": "string"},
                 "recursive": {"type": "boolean", "default": True},
                 "include_hidden": {"type": "boolean", "default": False},
-                "max_results": {"type": "integer", "default": 1000}
+                "max_results": {"type": "integer", "default": 1000},
             },
             "required": ["pattern"],
             "additionalProperties": False,
-        }
-        return f"- {self.name}: {self.description}\n  Input schema: {json.dumps(schema, ensure_ascii=False)}"
+        },
+    )
 
-    def run(self, tool_input: dict) -> dict:
+    def run(self, tool_input: dict) -> ToolResult:
+        """执行 glob 匹配，并根据是否隐藏文件进行二次过滤。"""
         pattern = str(tool_input["pattern"])
         recursive = tool_input.get("recursive", True)
         include_hidden = tool_input.get("include_hidden", False)
         max_results = int(tool_input.get("max_results", 1000))
-        
-        try:
-            matches = glob_module.glob(pattern, recursive=recursive)
-            matches.sort()
-            matches = matches[:max_results]
-            
-            files = []
-            directories = []
-            
-            for match in matches:
-                if not include_hidden:
-                    parts = match.split(os.sep)
-                    if any(part.startswith('.') and part not in ['.', '..'] for part in parts):
-                        continue
-                
-                if os.path.isfile(match):
-                    files.append(match)
-                elif os.path.isdir(match):
-                    directories.append(match)
-            
-            return {
-                "success": True,
+
+        matches = glob_module.glob(pattern, recursive=recursive)
+        matches.sort()
+        # 先限制总结果数，避免模型一次拿到过长列表。
+        matches = matches[:max_results]
+
+        files = []
+        directories = []
+
+        for match in matches:
+            if not include_hidden:
+                # glob 本身对隐藏路径控制有限，这里按路径片段再做一次过滤。
+                parts = match.split(os.sep)
+                if any(part.startswith(".") and part not in [".", ".."] for part in parts):
+                    continue
+
+            if os.path.isfile(match):
+                files.append(match)
+            elif os.path.isdir(match):
+                directories.append(match)
+
+        return ToolResult(
+            success=True,
+            data={
                 "files": files,
                 "directories": directories,
                 "total_files": len(files),
-                "total_directories": len(directories)
-            }
-        except Exception as e:
-            return {"success": False, "files": [], "directories": [], "total_files": 0, "total_directories": 0, "error": str(e)}
+                "total_directories": len(directories),
+            },
+        )
