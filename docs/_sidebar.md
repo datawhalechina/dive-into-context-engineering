@@ -1,5 +1,3 @@
-- [self-harness](./README.md)
-
 - <strong>Context Engineering 教程</strong>
   - [第1章：总览](./chapter1/overview.md)
   - [第2章：提示词工程](./chapter2/prompt_engineering.md)
