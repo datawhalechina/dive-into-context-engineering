@@ -347,7 +347,7 @@ if __name__ == "__main__":
             # 🟡 第二层循环：Generator (任务执行与生成)
             generator_memory = WorkingMemory(keep_latest_n=8, max_chars=80000)
             gen_step = 0
-            max_gen_iter = 20  # Generator 单任务最大迭代次数，防止验证失败时无限重试
+            max_gen_iter = 40  # Generator 单任务最大迭代次数，防止验证失败时无限重试
 
             while True:
                 gen_step += 1
