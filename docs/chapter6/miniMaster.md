@@ -72,8 +72,10 @@ class WorkingMemory:
     def __init__(self, keep_latest_n: int = 3, max_chars: int = 45000):
         self.memories = []
         # 触发压缩时，保留最后几个步骤的完整 JSON 不被压缩（保持当前工作的连贯性）
+
         self.keep_latest_n = keep_latest_n
         # 触发阈值：20k token 大约等于 40000~50000 个字符
+
         self.max_chars = max_chars
         self.summary = ""
 
@@ -92,6 +94,7 @@ class WorkingMemory:
             context += f"【早期步骤摘要】:\n{self.summary}\n\n"
 
         # 只要没超限，Agent 就能看到所有近期步骤的完整内容
+
         context += "【执行步骤】:\n" + json.dumps(self.memories, ensure_ascii=False, indent=2)
         return context
 
@@ -99,12 +102,14 @@ class WorkingMemory:
         """核心策略：判断当前上下文是否超过了容量阈值"""
         current_length = len(self.get_prompt_context())
         # 只有长度超标，且记忆数量大于我们要保留的底线时，才触发压缩
+
         return current_length > self.max_chars and len(self.memories) > self.keep_latest_n
 
     def get_memories_to_summarize(self) -> list:
         """获取需要被压缩的庞大旧记忆"""
         if self.check_needs_summary():
             # 取出除了最后 keep_latest_n 步之外的所有早期记忆，打包准备送去压缩
+
             return self.memories[:-self.keep_latest_n]
         return []
 
@@ -112,6 +117,7 @@ class WorkingMemory:
         """用大模型返回的摘要覆盖旧摘要，并清理掉已被压缩的冗长数据"""
         self.summary = new_summary
         # 核心：截断数组，只保留最后 keep_latest_n 步的详细记忆，腾出大量空间
+
         self.memories = self.memories[-self.keep_latest_n:]
 ```
 
@@ -139,6 +145,7 @@ Plan-Agent 是整个系统的大脑。它不直接干脏活累活（比如写代
 
 ```python
         # 伪代码：Plan-Agent 的核心路由逻辑
+
         if plan_tool == "init_tasks":
             to_do_list.init_tasks(task_list)
             continue
@@ -147,6 +154,7 @@ Plan-Agent 是整个系统的大脑。它不直接干脏活累活（比如写代
             curr_task = to_do_list.get_task_by_name(curr_task_name)
             
             # 唤醒下一层的 Generator-Agent 执行具体任务
+
             # 进入第二层循环...
 ```
 
@@ -161,11 +169,13 @@ Plan-Agent 是整个系统的大脑。它不直接干脏活累活（比如写代
 ```python
                 if gen_tool != "update_task_conclusion":
                     # 正常执行基础或搜索工具
+
                     result = execute_tool(gen_tool, gen_params)
                     generator_memory.add_memory(gen_step, gen_tool, gen_params, result)
                     continue  # 继续第二层循环干活
                 else:
                     # Generator 认为完成了，提交结论
+
                     conclusion = gen_params.get("conclusion", "")
                     to_do_list.update_task_conclusion(curr_task_name, conclusion)
                     # 触发质检，进入第三层循环...
@@ -180,6 +190,7 @@ Plan-Agent 是整个系统的大脑。它不直接干脏活累活（比如写代
 
 ```python
                             # Validate-Agent 得出验证结论
+
                             status = val_params.get("status") 
                             reason = val_params.get("reason", "未知错误")
 
@@ -188,6 +199,7 @@ Plan-Agent 是整个系统的大脑。它不直接干脏活累活（比如写代
                                 break  # 结束第三层循环，准备回退到第一层
                             else:
                                 # 【核心逻辑】验证失败：将错误原因强行写入 Generator 的记忆中
+
                                 generator_memory.add_memory(
                                     gen_step + 1,
                                     "system_feedback",
