@@ -37,9 +37,9 @@
 
 <div style="display:flex; flex-wrap:wrap; gap:24px; justify-content:center; margin-top:16px;">
   <div style="text-align:center; width:120px;">
-    <img src="../images/avatar.jpg" style="width:80px; height:80px; border-radius:50%; object-fit:cover;" />
+    <img src="https://www.github.com/funnamer.png" style="width:80px; height:80px; border-radius:50%; object-fit:cover;" />
     <div style="font-weight:bold; margin-top:8px;">张文星</div>
-    <div style="font-size:12px; color:#666;">项目负责人</div>
+    <div style="font-size:12px; color:#666;">项目负责人/核心贡献者</div>
     <div style="margin-top:4px;"><a href="https://github.com/funnamer">GitHub</a></div>
   </div>
   <div style="text-align:center; width:120px;">
