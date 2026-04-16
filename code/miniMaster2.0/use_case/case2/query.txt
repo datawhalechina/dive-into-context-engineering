@@ -1,0 +1,5 @@
+请帮我完成 miniMaster2.0 综合检查并按步骤执行：先查看项目目录下 prompting、tools、utils、docs 等关键文件和文件夹，
+在项目中搜索 workspace、当前目录、PowerShell、validate_tool 相关实现并定位对应文件，读取关键代码文件整理面向初学者
+的中文说明（解释 workspace 是什么、Agent 为何需要知道当前目录、Windows 下不能随意用 ls -a 的原因、Plan-Agent/Generator-Agent/Validate-Agent 各自职责）
+，将说明写入项目根目录的新文件 agent_test_report.md，在桌面创建新文件 agent_test_result.txt 并写入三行内容（本次检查是否完成、报告文件完整路径、检查中最重要的一点），
+完成后验证两个文件是否存在且内容非空，最后告知执行内容和验证结果，步骤失败需如实调整结论，请勿压缩需求表述。
